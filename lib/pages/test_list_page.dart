@@ -51,7 +51,7 @@ class _TestListPageState extends State<TestListPage> {
   Future<void> _deleteTest(int index) async {
     final testId = tests[index].testId;
     try {
-      await TestData.deleteTestData(testId);
+      await TestData.deleteTestData(testId!);
       setState(() {
         tests.removeAt(index);
       });

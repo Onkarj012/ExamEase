@@ -7,7 +7,6 @@ class DataHolder {
   static UserData? currentUser;
   static TestData? currentTest;
 
-  /// Clear all stored data (useful for logout or reset scenarios)
   static void clear() {
     currentClassroom = null;
     currentUser = null;

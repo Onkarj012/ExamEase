@@ -101,7 +101,7 @@ class _TestDetailsPageState extends State<TestDetailsPage> {
 
       try {
         if (!isEditTest) {
-          DataHolder.currentTest!.groupId = DataHolder.currentClassroom!.classroomId;
+          DataHolder.currentTest!.classroomId = DataHolder.currentClassroom!.classroomId!;
           DataHolder.currentTest!.saveTestData();
         } else {
           DataHolder.currentTest!.updateTestData();
