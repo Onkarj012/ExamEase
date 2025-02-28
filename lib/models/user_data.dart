@@ -28,7 +28,7 @@ class UserData {
       userId: json['user_id'],
       username: json['username'],
       phoneNumber: json['phone_number'],
-      fullName: json['full_name']
+      fullName: json['full_name'],
     );
   }
 
