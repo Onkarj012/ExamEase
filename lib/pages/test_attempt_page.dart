@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:ocr_app/models/result_data.dart';
 
 import '../Holders/data_holder.dart';
 import '../widgets/option_tile.dart';

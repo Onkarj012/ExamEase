@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:ocr_app/Holders/data_holder.dart';
 import 'package:ocr_app/models/test_data.dart';
 import 'package:ocr_app/pages/question_builder_page.dart';
-import 'package:ocr_app/widgets/test_list.dart';
+
+import '../widgets/test_card_widget.dart';
 
 class TestListPage extends StatefulWidget {
 
@@ -95,8 +96,19 @@ class _TestListPageState extends State<TestListPage> {
               letterSpacing: 1.2,
             ),
           ),
+        ) :
+        ListView.builder(
+          itemCount: tests.length,
+          itemBuilder: (context, index) {
+            final test = tests[index];
+            return TestCardWidget(
+              test: test,
+              index: index,
+              deleteTest: _deleteTest,
+              editTest: _editTest,
+            );
+          },
         )
-            : TestList(tests: tests, deleteTest: _deleteTest, editTest: _editTest),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
@@ -104,7 +116,7 @@ class _TestListPageState extends State<TestListPage> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => QuestionBuilderPage(),
+              builder: (context) => const QuestionBuilderPage(),
             ),
           );
         },

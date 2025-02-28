@@ -13,7 +13,7 @@ class TestData {
   DateTime deadlineTime;
   int testTime;
   int result;
-  String groupId;
+  int groupId;
 
   TestData({
     this.testId = '',
@@ -24,7 +24,7 @@ class TestData {
     DateTime? deadlineTime,
     this.testTime = 0,
     this.result = -1,
-    this.groupId = ''
+    this.groupId = -1,
   })  : questions = questions ?? [...List.generate(1, (index) => QuestionData())],
         postedAt = postedAt ?? DateTime.now(),
         startFrom = startFrom ?? DateTime.now(),

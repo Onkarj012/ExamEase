@@ -2,29 +2,33 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class UserData {
-  String userId;
+  int userId;
   String username;
   String phoneNumber;
+  String fullName;
 
   UserData({
-    this.userId = '',
+    this.userId = -1,
     this.username = '',
     this.phoneNumber = '',
+    this.fullName = '',
   });
 
   Map<String, dynamic> toJson() {
     return {
-      'userId': userId,
+      'user_id': userId,
       'username': username,
-      'phoneNumber': phoneNumber,
+      'phone_number': phoneNumber,
+      'full_name': fullName
     };
   }
 
   factory UserData.fromJson(Map<String, dynamic> json) {
     return UserData(
-      userId: json['userId'],
+      userId: json['user_id'],
       username: json['username'],
-      phoneNumber: json['phoneNumber'],
+      phoneNumber: json['phone_number'],
+      fullName: json['full_name']
     );
   }
 

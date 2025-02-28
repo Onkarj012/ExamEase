@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ocr_app/pages/classroom_list_page.dart';
+
 import '../services/auth_service.dart';
 import 'login_page.dart';
 
@@ -20,40 +21,55 @@ class _SignupPageState extends State<SignupPage> {
 
   Future<void> signUp() async {
     try {
-      String username = _usernameController.text;
-      String fullName = _fullNameController.text;
-      String phoneNumber = _phoneNumberController.text;
-      String password = _passwordController.text;
+      String username = _usernameController.text.trim();
+      String fullName = _fullNameController.text.trim();
+      String phoneNumber = _phoneNumberController.text.trim();
+      String password = _passwordController.text.trim();
 
-      var response = await AuthService().signUp(
+      var statusCode = await AuthService().signUp(
         username,
         fullName,
         phoneNumber,
         password,
       );
 
-      // If successful, navigate to HomePage
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => ClassroomListPage()),
-      );
+      if (statusCode == 200) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const ClassroomListPage()),
+        );
+      } else {
+        String? message;
+        if (statusCode == 404) {
+          message = 'User not found';
+        } else if (statusCode == 401) {
+          message = 'Invalid credentials.';
+        } else if (statusCode == 500) {
+          message = 'Internal Server error.';
+        }
+        showErrorDialog(message!);
+      }
     } catch (e) {
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text('Error'),
-          content: Text(e.toString()),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text('OK'),
-            ),
-          ],
-        ),
-      );
+      showErrorDialog(e.toString());
     }
+  }
+
+  void showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Error'),
+        content: Text(message),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override

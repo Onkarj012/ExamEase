@@ -308,37 +308,37 @@ class _QuestionBuilderPageState extends State<QuestionBuilderPage> {
                     ),
                   ),
                   OptionEditorDrawer(
-                    textControllers: _textControllers,
-                    images: [
-                      currentQuestion.questionImage,
-                      ...currentQuestion.options.map((o) => o.image),
-                    ],
-                    onSelectTextCallbacks: List.generate(
-                      5,
-                          (i) => () => _onExtractText(i - 1),
-                    ),
-                    onCaptureImageCallbacks: List.generate(
-                      5,
-                          (i) => () => _onCaptureImage(i - 1),
-                    ),
-                    onTextChangedCallbacks: [
-                          (newText) {
-                        setState(() {
-                          currentQuestion.questionText = newText;
-                        });
-                      },
-                      ...List.generate(currentQuestion.options.length, (i) {
-                        return (newText) {
+                      textControllers: _textControllers,
+                      images: [
+                        currentQuestion.questionImage,
+                        ...currentQuestion.options.map((o) => o.image),
+                      ],
+                      onSelectTextCallbacks: List.generate(
+                        5,
+                            (i) => () => _onExtractText(i - 1),
+                      ),
+                      onCaptureImageCallbacks: List.generate(
+                        5,
+                            (i) => () => _onCaptureImage(i - 1),
+                      ),
+                      onTextChangedCallbacks: [
+                            (newText) {
                           setState(() {
-                            currentQuestion.options[i].optionText = newText;
+                            currentQuestion.questionText = newText;
                           });
-                        };
-                      }),
-                    ],
-                    questionIndex: _currentQuestionIndex,
-                    correctOptionIndex: currentQuestion.correctOptionIndex,
-                    onSetCorrectOption: _onSetCorrectOption,
-                    deleteCurrentQuestion: _deleteCurrentQuestion
+                        },
+                        ...List.generate(currentQuestion.options.length, (i) {
+                          return (newText) {
+                            setState(() {
+                              currentQuestion.options[i].optionText = newText;
+                            });
+                          };
+                        }),
+                      ],
+                      questionIndex: _currentQuestionIndex,
+                      correctOptionIndex: currentQuestion.correctOptionIndex,
+                      onSetCorrectOption: _onSetCorrectOption,
+                      deleteCurrentQuestion: _deleteCurrentQuestion
                   ),
                   if (imageFile != null)
                     ElevatedButton(

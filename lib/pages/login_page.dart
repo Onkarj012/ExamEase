@@ -1,88 +1,88 @@
 import 'package:flutter/material.dart';
 import 'package:ocr_app/pages/classroom_list_page.dart';
-import '../services/auth_service.dart'; // Import AuthService
+
+import '../services/auth_service.dart';
 import 'signup_page.dart';
 
 class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
+
   @override
   _LoginPageState createState() => _LoginPageState();
 }
 
 class _LoginPageState extends State<LoginPage> {
+  bool _isLoading = false;
   bool _isPasswordVisible = false;
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
   Future<void> login() async {
+
+    setState(() {
+      _isLoading = true;
+    });
     try {
       String username = _usernameController.text.trim();
       String password = _passwordController.text.trim();
 
-      // Call the AuthService to perform login
-      var response = await AuthService().login(username, password);
+      var statusCode = await AuthService().login(username, password);
 
-      if (response['status'] == 'success') {
-        // Navigate to HomePage if login is successful
+      if (statusCode == 200) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => ClassroomListPage()),
+          MaterialPageRoute(builder: (context) => const ClassroomListPage()),
         );
       } else {
-        // Show error dialog if login fails
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Text('Error'),
-            content: Text(response['message'] ?? 'Login failed. Please try again.'),
-            actions: <Widget>[
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                child: Text('OK'),
-              ),
-            ],
-          ),
-        );
+        String? message;
+        if(statusCode == 409) {
+          message = 'Username already taken.';
+        } else if (statusCode == 500) {
+          message = 'Internal Server error.';
+        }
+        showErrorDialog(message!);
       }
     } catch (e) {
-      // Handle exception and show error dialog
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text('Error'),
-          content: Text(e.toString()),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text('OK'),
-            ),
-          ],
-        ),
-      );
+      showErrorDialog(e.toString());
     }
+  }
+
+  void showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Error'),
+        content: Text(message),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFF5F5F5),
+      backgroundColor: const Color(0xFFF5F5F5),
       body: Center(
         child: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(horizontal: 24.0),
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Icon(
+              const Icon(
                 Icons.school,
                 size: 80,
                 color: Color(0xFF0A1D37),
               ),
-              SizedBox(height: 10),
-              Text(
+              const SizedBox(height: 10),
+              const Text(
                 "ExamEase",
                 style: TextStyle(
                   fontFamily: 'Poppins',
@@ -91,21 +91,23 @@ class _LoginPageState extends State<LoginPage> {
                   color: Color(0xFF0A1D37),
                 ),
               ),
-              SizedBox(height: 30),
+              const SizedBox(height: 30),
               buildTextField("Username", "Enter your username", Icons.person_outline, _usernameController),
-              SizedBox(height: 15),
+              const SizedBox(height: 15),
               buildPasswordField("Password", "Enter your password", Icons.lock_outline, _passwordController),
-              SizedBox(height: 25),
+              const SizedBox(height: 25),
               ElevatedButton(
-                onPressed: login, // Trigger login
+                onPressed: login,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFF0A1D37),
-                  minimumSize: Size(double.infinity, 50),
+                  backgroundColor: const Color(0xFF0A1D37),
+                  minimumSize: const Size(double.infinity, 50),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child: Text(
+                child: _isLoading
+                    ? const CircularProgressIndicator(color: Colors.white) // Show loader
+                    : const Text(
                   "Login",
                   style: TextStyle(
                     fontSize: 16,
@@ -115,7 +117,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               Row(
                 children: [
                   Expanded(child: Divider(color: Colors.grey[400])),
@@ -132,9 +134,9 @@ class _LoginPageState extends State<LoginPage> {
                   Expanded(child: Divider(color: Colors.grey[400])),
                 ],
               ),
-              SizedBox(height: 20),
-              buildSocialButton("Google", "G", Color(0xFF0A1D37)),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
+              buildSocialButton("Google", "G", const Color(0xFF0A1D37)),
+              const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -152,7 +154,7 @@ class _LoginPageState extends State<LoginPage> {
                         MaterialPageRoute(builder: (context) => SignupPage()),
                       );
                     },
-                    child: Text(
+                    child: const Text(
                       "Register here",
                       style: TextStyle(
                         fontFamily: 'Poppins',
@@ -176,17 +178,17 @@ class _LoginPageState extends State<LoginPage> {
       children: [
         Text(
           label,
-          style: TextStyle(
+          style: const TextStyle(
             fontFamily: 'Poppins',
             fontSize: 14,
             fontWeight: FontWeight.w500,
             color: Color(0xFF0A1D37),
           ),
         ),
-        SizedBox(height: 8),
+        const SizedBox(height: 8),
         TextField(
           controller: controller,
-          style: TextStyle(fontFamily: 'Poppins'),
+          style: const TextStyle(fontFamily: 'Poppins'),
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: TextStyle(
@@ -212,18 +214,18 @@ class _LoginPageState extends State<LoginPage> {
       children: [
         Text(
           label,
-          style: TextStyle(
+          style: const TextStyle(
             fontFamily: 'Poppins',
             fontSize: 14,
             fontWeight: FontWeight.w500,
             color: Color(0xFF0A1D37),
           ),
         ),
-        SizedBox(height: 8),
+        const SizedBox(height: 8),
         TextField(
           controller: controller,
           obscureText: !_isPasswordVisible,
-          style: TextStyle(fontFamily: 'Poppins'),
+          style: const TextStyle(fontFamily: 'Poppins'),
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: TextStyle(
@@ -258,7 +260,7 @@ class _LoginPageState extends State<LoginPage> {
     return OutlinedButton.icon(
       onPressed: () {},
       style: OutlinedButton.styleFrom(
-        minimumSize: Size(double.infinity, 50),
+        minimumSize: const Size(double.infinity, 50),
         side: BorderSide(color: borderColor),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10),
@@ -266,7 +268,7 @@ class _LoginPageState extends State<LoginPage> {
       ),
       icon: Text(
         iconText,
-        style: TextStyle(
+        style: const TextStyle(
           fontSize: 20,
           color: Colors.black,
           fontFamily: 'Poppins',
@@ -274,7 +276,7 @@ class _LoginPageState extends State<LoginPage> {
       ),
       label: Text(
         text,
-        style: TextStyle(
+        style: const TextStyle(
           fontFamily: 'Poppins',
           color: Colors.black,
         ),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:ocr_app/models/test_data.dart';
+import 'package:ocr_app/services/date_time_formatter_service.dart';
 import 'package:ocr_app/widgets/test_action_button.dart';
 
 class TestCardWidget extends StatelessWidget {
@@ -15,20 +15,6 @@ class TestCardWidget extends StatelessWidget {
     required this.editTest,
     super.key,
   });
-
-  String _formatDate(DateTime date) {
-    final now = DateTime.now();
-    final difference = now.difference(date);
-    if (difference.inDays == 0) {
-      return "Today, ${DateFormat.Hm().format(date)}";
-    } else if (difference.inDays == 1) {
-      return "Yesterday, ${DateFormat.Hm().format(date)}";
-    } else if (difference.inDays == -1) {
-      return "Tomorrow, ${DateFormat.Hm().format(date)}";
-    } else {
-      return DateFormat('d MMM yyyy, H:mm').format(date);
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -82,7 +68,7 @@ class TestCardWidget extends StatelessWidget {
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
-                                  'Start: ${_formatDate(test.startFrom)}',
+                                  'Start: ${DateTimeFormatterService.formatDate(test.startFrom)}',
                                   style: const TextStyle(
                                     fontSize: 14,
                                     color: Colors.white70,
@@ -100,7 +86,7 @@ class TestCardWidget extends StatelessWidget {
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
-                                  'Deadline: ${_formatDate(test.deadlineTime)}',
+                                  'Deadline: ${DateTimeFormatterService.formatDate(test.deadlineTime)}',
                                   style: const TextStyle(
                                     fontSize: 14,
                                     color: Colors.white70,
@@ -158,7 +144,7 @@ class TestCardWidget extends StatelessWidget {
               bottom: 8,
               right: 16,
               child: Text(
-                'Posted At: ${_formatDate(test.postedAt)}',
+                'Posted At: ${DateTimeFormatterService.formatDate(test.postedAt)}',
                 style: const TextStyle(
                   fontSize: 12,
                   color: Colors.white70,

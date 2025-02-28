@@ -1,14 +1,18 @@
 import 'dart:convert';
+
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../Holders/data_holder.dart';
+import '../models/user_data.dart';
 
 class AuthService {
-  static const String baseUrl = 'http://10.0.2.2:5001/api';  // For Android Simu.
-  // static const String baseUrl = 'http://localhost:5001/api'; // For all others
+  // static const String baseUrl = 'http://192.168.2.9:5001/api/auth';
+  static const String baseUrl = 'https://examease-backend-2.onrender.com/api/auth';
 
-  // Method for Sign Up
-  Future<Map<String, dynamic>> signUp(
+  Future<int> signUp(
       String username, String fullName, String phoneNumber, String password) async {
-    final url = Uri.parse('$baseUrl/users/signup');
+    final url = Uri.parse('$baseUrl/signup');
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},
@@ -21,15 +25,15 @@ class AuthService {
     );
 
     if (response.statusCode == 201) {
-      return json.decode(response.body);
-    } else {
-      throw Exception('Failed to create user: ${response.body}');
+      var responseBody = json.decode(response.body);
+      await _saveUserSession(responseBody);
     }
+
+    return response.statusCode;
   }
 
-  // Method for Login
-  Future<Map<String, dynamic>> login(String username, String password) async {
-    final url = Uri.parse('$baseUrl/users/login');
+  Future<int> login(String username, String password) async {
+    final url = Uri.parse('$baseUrl/login');
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},
@@ -40,21 +44,37 @@ class AuthService {
     );
 
     if (response.statusCode == 200) {
-      // Decode the response and add the status field
       var responseBody = json.decode(response.body);
-      responseBody['status'] = 'success'; // Add status manually
-      return responseBody;
-    } else if (response.statusCode == 401) {
-      return {
-        'status': 'error',
-        'message': 'Invalid username or password.',
-      };
-    } else {
-      return {
-        'status': 'error',
-        'message': 'Login failed: ${response.body}',
-      };
+      await _saveUserSession(responseBody);
     }
+
+    return response.statusCode;
   }
 
+  Future<void> _saveUserSession(Map<String, dynamic> userData) async {
+    final prefs = await SharedPreferences.getInstance();
+    final user = userData['user'];
+
+    await prefs.setString('auth_token', userData['token']);
+    await prefs.setString('username', user['username']);
+    await prefs.setString('full_name', user['fullName']);
+    await prefs.setString('phone_number', user['phoneNumber']);
+    await prefs.setInt('user_id', user['id']);
+
+    DataHolder.currentUser = UserData(
+      userId: user['id'],
+      username: user['username'],
+      phoneNumber: user['phone_number'],
+    );
+  }
+
+  Future<bool> isUserLoggedIn() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('auth_token') != null;
+  }
+
+  Future<void> logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+  }
 }

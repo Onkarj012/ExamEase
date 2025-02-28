@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:ocr_app/Holders/data_holder.dart';
-import 'package:ocr_app/pages/test_list_page.dart';
+import 'package:ocr_app/services/classroom_service.dart';
+import 'package:ocr_app/widgets/classroom_card.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/classroom_data.dart';
+import 'login_page.dart';
 
 class ClassroomListPage extends StatefulWidget {
 
@@ -24,7 +26,7 @@ class _ClassroomListPageState extends State<ClassroomListPage> {
 
   Future<void> _loadClassrooms() async {
     try {
-      final loadedClassrooms = await ClassroomData.loadAllClassroomsForUser(DataHolder.currentUser!.userId);
+      final loadedClassrooms = await ClassroomService().loadAllClassroomsForUser();
       setState(() {
         classrooms = loadedClassrooms;
         isLoading = false;
@@ -36,14 +38,13 @@ class _ClassroomListPageState extends State<ClassroomListPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to load classrooms: $e')),
       );
+      print('Failed to load classrooms: $e');
     }
   }
 
-
-
   Future<void> _leaveClassroom(int index) async {
     final classroomId = classrooms[index].classroomId;
-    await ClassroomData.leaveClassroom(classroomId);
+    await ClassroomService().leaveClassroom(classroomId);
     setState(() {
       classrooms.removeAt(index);
     });
@@ -52,7 +53,6 @@ class _ClassroomListPageState extends State<ClassroomListPage> {
   Future<void> _addClassroomDialog() async {
     final TextEditingController classroomNameController = TextEditingController();
     bool isSubmitting = false;
-    ClassroomData? newClassroom;
 
     await showDialog(
       context: context,
@@ -63,17 +63,18 @@ class _ClassroomListPageState extends State<ClassroomListPage> {
               title: const Text('Add New Classroom'),
               content: TextField(
                 controller: classroomNameController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Classroom Name',
-                  border: OutlineInputBorder(),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                 ),
               ),
               actions: [
                 TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Text('Cancel'),
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text("Cancel"),
                 ),
                 ElevatedButton(
                   onPressed: isSubmitting
@@ -89,19 +90,18 @@ class _ClassroomListPageState extends State<ClassroomListPage> {
                       isSubmitting = true;
                     });
                     try {
-                      newClassroom = ClassroomData(
+                      ClassroomData newClassroom = await ClassroomService()
+                          .saveClassroom(ClassroomData(
                         classroomName: classroomNameController.text.trim(),
                         createdAt: DateTime.now(),
-                      );
-                      await newClassroom!.saveClassroom();
-
-                      await newClassroom!.joinClassroom('teacher');
+                      ));
 
                       setState(() {
+                        classrooms.add(newClassroom);
                         isSubmitting = false;
                       });
 
-                      Navigator.pop(context);  // Close the dialog
+                      Navigator.pop(context);
 
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Classroom added successfully')),
@@ -115,11 +115,23 @@ class _ClassroomListPageState extends State<ClassroomListPage> {
                       );
                     }
                   },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0A1D37),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
                   child: isSubmitting
-                      ? const CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
                   )
-                      : const Text('Add'),
+                      : const Text(
+                    'Add',
+                    style: TextStyle(color: Colors.white),
+                  ),
                 ),
               ],
             );
@@ -127,13 +139,8 @@ class _ClassroomListPageState extends State<ClassroomListPage> {
         );
       },
     );
-
-    if (newClassroom != null) {
-      setState(() {
-        classrooms.add(newClassroom!);
-      });
-    }
   }
+
 
   Future<void> _joinClassroomDialog() async {
     final TextEditingController classroomIdController = TextEditingController();
@@ -159,37 +166,36 @@ class _ClassroomListPageState extends State<ClassroomListPage> {
             ),
             ElevatedButton(
               onPressed: () async {
-                final classroomId = classroomIdController.text.trim();
-                if (classroomId.isEmpty) {
+                final classroomCode = classroomIdController.text.trim();
+                if (classroomCode.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Classroom code cannot be empty')),
                   );
                   return;
                 }
                 try {
-                  ClassroomData? classroom = await ClassroomData.loadClassroomData(classroomId);
-                  if (classroom != null) {
-                    print(1);
-                    await classroom.joinClassroom('student');
-                    setState(() {
-                      classrooms.add(classroom);
-                    });
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Joined classroom successfully')),
-                    );
-                    Navigator.pop(context);
-                  } else {
-                    print(2);
-                    const SnackBar(content: Text('No classroom found'));
-                  }
-
-                } catch (e) {
+                  ClassroomData? newClassroom = await ClassroomService().joinClassroom(classroomCode, 'student');
+                  setState(() {
+                    classrooms.add(newClassroom!);
+                  });
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Joined classroom successfully')),
+                  );
+                  Navigator.pop(context);
+                                } catch (e) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('Failed to join classroom: $e')),
                   );
                 }
               },
-              child: const Text('Join'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF0A1D37),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+              child: const Text(
+                'Join',
+                style: TextStyle(color: Colors.white),
+              ),
             ),
           ],
         );
@@ -197,59 +203,63 @@ class _ClassroomListPageState extends State<ClassroomListPage> {
     );
   }
 
+  Future<void> _logout() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.remove('username');
+    await prefs.remove('phoneNumber');
+    await prefs.remove('user_id');
+
+    // Navigate to LoginPage and remove previous routes
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginPage()),
+          (route) => false,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Classroom List'),
-      ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : classrooms.isEmpty
-          ? const Center(
-        child: Text(
-          'No classrooms available.',
+        title: const Text(
+            'Classroom List',
           style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 1.1,
+            color: Color(0xFF0A1D37),
           ),
         ),
-      )
-          : ListView.builder(
-        itemCount: classrooms.length,
-        itemBuilder: (context, index) {
-          final classroom = classrooms[index];
-          return Card(
-            margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-            child: ListTile(
-              title: Text(classroom.classroomName),
-              subtitle: Text('Created on: ${classroom.createdAt}\ncode: ${classroom.classroomId}'),
-              trailing: PopupMenuButton<int>(
-                onSelected: (value) {
-                  if (value == 1) {
-                    // _deleteClassroom(index);
-                  } else {
-                    _leaveClassroom(index);
-                  }
-                },
-                itemBuilder: (context) => [
-                  const PopupMenuItem(value: 1, child: Text('Delete')),
-                  const PopupMenuItem(value: 2, child: Text('Leave')),
-                ],
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout, color: Color(0xFF0A1D37)),
+            onPressed: _logout,
+          ),
+        ],
+      ),
+      body: Container(
+        color: Colors.white,
+        child: isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : RefreshIndicator(
+            onRefresh: _loadClassrooms,
+            child:
+            classrooms.isEmpty
+                ? const Center(
+              child: Text(
+                'No classrooms available.',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.1,
+                  color: Colors.black54,
+                ),
               ),
-              onTap: () {
-                DataHolder.currentClassroom = classroom;
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const TestListPage(),
-                  ),
-                );
+            )
+                : ListView.builder(
+              itemCount: classrooms.length,
+              itemBuilder: (context, index) {
+                final classroom = classrooms[index];
+                return ClassroomCard(classroom: classroom, onLeaveClassroom: () => _leaveClassroom(index));
               },
-            ),
-          );
-        },
+            ))
       ),
       floatingActionButton: Column(
         mainAxisSize: MainAxisSize.min,
@@ -257,13 +267,15 @@ class _ClassroomListPageState extends State<ClassroomListPage> {
           FloatingActionButton(
             onPressed: _addClassroomDialog,
             tooltip: 'Add Classroom',
-            child: const Icon(Icons.add),
+            backgroundColor: const Color(0xFF0A1D37),
+            child: const Icon(Icons.add, color: Colors.white),
           ),
           const SizedBox(height: 10),
           FloatingActionButton(
             onPressed: _joinClassroomDialog,
             tooltip: 'Join Classroom',
-            child: const Icon(Icons.group_add),
+            backgroundColor: const Color(0xFF0A1D37),
+            child: const Icon(Icons.group_add, color: Colors.white),
           ),
         ],
       ),

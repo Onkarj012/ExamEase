@@ -6,14 +6,14 @@ import '../services/random_id_generator.dart';
 
 class ResultData {
   String resultId;
-  String userId;
+  int userId;
   String testId;
   int result;
   DateTime submittedAt;
 
   ResultData({
     String? resultId,
-    String? userId = '',
+    int? userId = -1,
     String? testId = '',
     int? result,
     DateTime? submittedAt,
