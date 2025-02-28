@@ -19,7 +19,7 @@ class UserData {
       'user_id': userId,
       'username': username,
       'phone_number': phoneNumber,
-      'full_name': fullName
+      'full_name': fullName,
     };
   }
 
